@@ -13,6 +13,7 @@ export interface PeriodicElement {
 export interface formData {
   position: number;
   name: string;
+  weight: number;
   symbol: string;
 }
 
@@ -45,22 +46,28 @@ export class TableFilteringExample {
 
   position = new FormControl();
   name = new FormControl();
+  weight = new FormControl();
   symbol = new FormControl();
 
   formData: formData = {
     position: this.position.value as number,
-    name: this.name.value || ('' as string),
-    symbol: this.symbol.value || ('' as string),
+    name: (this.name.value || '') as string,
+    weight: this.weight.value as number,
+    symbol: this.symbol.value as string,
   };
 
   constructor(formBuilder: FormBuilder) {
     this.dataSource.filterPredicate = ((data, filter) => {
       console.log('data', data);
       console.log('filter', filter);
-      const a = !filter.position || data.position === filter.position;
+      const a =
+        !filter.position || data.position.toString().includes(filter.position);
       const b = !filter.name || data.name.toLowerCase().includes(filter.name);
-      const c = !filter.symbol || data.symbol === filter.symbol;
-      return a && b && c;
+      const c =
+        !filter.symbol || data.symbol.toLowerCase().includes(filter.symbol);
+      const d =
+        !filter.weight || data.weight.toString().includes(filter.weight);
+      return a && b && c && d;
     }) as (PeriodicElement, string) => boolean;
 
     this.formControl = formBuilder.group({
@@ -69,12 +76,10 @@ export class TableFilteringExample {
       symbol: '',
     });
     this.formControl.valueChanges.subscribe((value) => {
-      // console.log('value', value);
       const filter = {
         ...value,
         name: value.name.trim().toLowerCase(),
       } as string;
-      // console.log('filter', filter);
       this.dataSource.filter = filter;
     });
   }
@@ -84,9 +89,6 @@ export class TableFilteringExample {
   }
 
   keyupChange(e) {
-    console.log('event', e.target.value);
-    console.log('formData', this.formData);
-    // this.dataSource.filter = `{no: ${this.formData.position}, name: ${this.formData.name}, symbol: ${this.formData.symbol}}`;
     const filter = {
       ...this.formData,
       name: this.formData.name.trim().toLowerCase(),
